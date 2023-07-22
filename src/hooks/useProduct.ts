@@ -1,5 +1,5 @@
 // 單純使用 useReducer 的 custom hook 封裝
-import { useReducer } from "react"
+import { useReducer, useMemo } from "react"
 import { STATUS, STATUS_TYPE } from "@/constants/common"
 
 // 每個 hook 都可以有自己的 type definition in this file and also will export it
@@ -8,7 +8,7 @@ export type ProductStore = {
   error: WuCommon.ErrorType;
   products: any[];
 }
-export type ProductAction = {
+export type ProductActions = {
   init: () => Promise<void>;
   getList: () => Promise<void>;
   getProductById: (id: string) => Promise<void>;
@@ -59,10 +59,10 @@ const initialStore: ProductStore = {
   error: null,
   products: []
 }
-const useProduct = (): { store: ProductStore, action: ProductAction } => {
-  const [store, dispatch] = useReducer(reducer, initialStore)
 
-  const action = {
+const useProduct = (): { store: ProductStore, actions: ProductActions } => {
+  const [store, dispatch] = useReducer(reducer, initialStore)
+  const actions = useMemo(() => ({
     init: async () => {
       try {
         dispatch({ type: ProductActionType.INIT })
@@ -107,30 +107,9 @@ const useProduct = (): { store: ProductStore, action: ProductAction } => {
         dispatch({ type: ProductActionType.GET_LIST_FAIL, payload: { error } })
       }
     },
-  }
+  }), [])
 
-  return { store, action }
+  return { store, actions }
 }
 
 export default useProduct
-
-/*
-import { useEffect } from "react"
-import useProduct from "@/hooks/useProduct"
-
-const PageComponent = ()=>{
-  const { store, action } = useProduct()
-  
-  useEffect(()=>{
-    action.init()
-  },[])
-
-  if(store.status !== "init" && store.status === "loading") return null
-
-  return (
-    <div>
-      <button onClick={action.getList}>get list</button>
-    </div>
-  )
-}
-*/

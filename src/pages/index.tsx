@@ -1,6 +1,6 @@
 import ProductProvider from "@/contexts/Product"
-import TestComponent from "@/components/Count"
-import TestAnother from "@/components/Count/TestAnother"
+import TestComponent from "@/components/Example3"
+import TestAnother from "@/components/Another"
 
 export default function PageComponent() {
   return (

@@ -1,5 +1,5 @@
 // useContext, useReducer 的 custom hook template
-import { createContext, useContext, useReducer } from "react"
+import { createContext, useContext, useMemo, useReducer } from "react"
 import { STATUS, STATUS_TYPE } from "@/constants/common"
 
 // 全域的 error type, 定義前後端討論好的 error schema, 處理 error 的時都可以使用同樣邏輯
@@ -11,7 +11,7 @@ export type ProductStore = {
   error: WuCommon.ErrorType;
   products: any[]; // 這裡可以使用 @types 裡面定義的，因為屬於 api data definition 的範疇
 }
-export type ProductAction = {
+export type ProductActions = {
   init: () => Promise<void>;
   getList: () => Promise<void>;
   getProductById: (id: string) => Promise<void>;
@@ -33,8 +33,11 @@ const initialStore = {
   products: []
 }
 
-export const ProductsContext = createContext(null)
-export const useProductCtx = () => useContext(ProductsContext)
+export const ProductContext = createContext<{
+  store: ProductStore,
+  actions: ProductActions
+}>(null!)
+export const useProductCtx = () => useContext(ProductContext)
 
 type ReducerAction = {
   type: ProductActionType;
@@ -71,10 +74,9 @@ const reducer = (store: ProductStore, action: ReducerAction): ProductStore => {
  * 透過一層封裝(底下的 action object)，達成類似 suga/thunk 等非同步處理(side effect)，
  * 也可以把 api call 或 api 資料處理都放在這個 hook 中，而不是直接散落在各個 component 內
  */
-const useProduct = (): { store: ProductStore, action: ProductAction } => {
+const useProduct = (): { store: ProductStore, actions: ProductActions } => {
   const [store, dispatch] = useReducer(reducer, initialStore)
-
-  const action = {
+  const actions = useMemo(() => ({
     init: async () => {
       try {
         dispatch({ type: ProductActionType.INIT })
@@ -119,42 +121,9 @@ const useProduct = (): { store: ProductStore, action: ProductAction } => {
         dispatch({ type: ProductActionType.GET_LIST_FAIL, payload: { error } })
       }
     },
-  }
+  }), [])
 
-  return { store, action }
+  return { store, actions }
 }
 
 export default useProduct
-
-/*
-import { useEffect } from "react"
-import useProduct, { ProductsContext } from "@/hooks/useProduct"
-
-const PageComponent = ()=>{
-  const { store, action } = useProduct()
-  
-  useEffect(()=>{
-    action.init()
-  },[])
-
-  return (
-    <ProductsContext.Provider value={{store, action}}>
-      {store.status === "loading" ? null: children}
-    </ProductsContext.Provider>
-  )
-}
-
----
-In child component
-
-import { useProductCtx } from "@/hooks/useProduct"
-const ChildComponent = ()=>{
-  const { store, action } = useProductCtx()
-
-  return (
-    <div>
-      <button onClick={action.getList}>get list</button>
-    </div>
-  )
-}
-*/

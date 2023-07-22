@@ -6,9 +6,8 @@ export type ProductStore = {
   error: WuContextProvider.ErrorType;
   products: any[];
 }
-export type ProductAction = {
+export type ProductActions = {
   init: () => Promise<void>;
-  test: () => Promise<void>;
   getList: () => Promise<void>;
   getProductById: (id: string) => Promise<void>;
 }
@@ -19,7 +18,6 @@ export enum ProductActionType {
   GET_LIST,
   GET_LIST_SUCCESS,
   GET_LIST_FAIL,
-  TEST,
 }
 
 type ProductReducerAction = WuContextProvider.ReducerAction<ProductActionType>
@@ -28,9 +26,6 @@ const reducer = (
   action: ProductReducerAction,
 ): ProductStore => {
   switch (action.type) {
-    case ProductActionType.TEST: {
-      return { ...store, status: STATUS.INIT as STATUS_TYPE }
-    }
     case ProductActionType.INIT: {
       return { ...store, status: STATUS.LOADING as STATUS_TYPE }
     }
@@ -54,7 +49,9 @@ const reducer = (
   }
 }
 
-const actionsCreator = (dispatch: React.Dispatch<ProductReducerAction>): ProductAction => ({
+const actionsCreator = (
+  dispatch: React.Dispatch<ProductReducerAction>
+): ProductActions => ({
   init: async () => {
     try {
       dispatch({ type: ProductActionType.INIT })
@@ -99,13 +96,10 @@ const actionsCreator = (dispatch: React.Dispatch<ProductReducerAction>): Product
       dispatch({ type: ProductActionType.GET_LIST_FAIL, payload: { error } })
     }
   },
-  test: async () => {
-    dispatch({ type: ProductActionType.TEST })
-  }
 })
 
-type ProductContextType = WuContextProvider.CreateContextType<ProductStore, ProductAction>
-const ProductsContext = createContext<ProductContextType>(null!)
+type ProductContextType = WuContextProvider.CreateContextType<ProductStore, ProductActions>
+const ProductContext = createContext<ProductContextType>(null!)
 
 const initialStore: ProductStore = {
   status: STATUS.LOADING as STATUS_TYPE,
@@ -117,11 +111,11 @@ const ProductProvider = ({ children }: React.PropsWithChildren) => {
   const actions = useMemo(() => actionsCreator(dispatch), [])
 
   return (
-    <ProductsContext.Provider value={{ store, actions }}>
+    <ProductContext.Provider value={{ store, actions }}>
       {children}
-    </ProductsContext.Provider >
+    </ProductContext.Provider >
   )
 }
 
-export const useProductCtx = () => useContext(ProductsContext)
+export const useProductCtx = () => useContext(ProductContext)
 export default ProductProvider

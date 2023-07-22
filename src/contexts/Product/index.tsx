@@ -7,7 +7,7 @@ export type ProductStore = {
   products: any[];
 }
 
-export type ProductAction = {
+export type ProductActions = {
   init: () => Promise<void>;
   getList: () => Promise<void>;
   getProductById: (id: string) => Promise<void>;
@@ -26,7 +26,6 @@ type ReducerAction = {
   type: ProductActionType;
   payload?: any;
 }
-
 const reducer = (store: ProductStore, action: ReducerAction): ProductStore => {
   switch (action.type) {
     case ProductActionType.INIT: {
@@ -52,7 +51,9 @@ const reducer = (store: ProductStore, action: ReducerAction): ProductStore => {
   }
 }
 
-const actionsCreator = (dispatch: React.Dispatch<ReducerAction>): ProductAction => ({
+const actionsCreator = (
+  dispatch: React.Dispatch<ReducerAction>
+): ProductActions => ({
   init: async () => {
     try {
       dispatch({ type: ProductActionType.INIT })
@@ -106,13 +107,12 @@ const initialStore: ProductStore = {
 }
 const ProductContext = createContext<{
   store: ProductStore,
-  actions: ProductAction
+  actions: ProductActions
 }>(null!)
 
 const ProductProvider = ({ children }: React.PropsWithChildren) => {
   const [store, dispatch] = useReducer(reducer, initialStore)
   const actions = useMemo(() => actionsCreator(dispatch), [])
-  console.log(`🚀 ~ ProductProvider ~ actions: rerender`);
 
   return (
     <ProductContext.Provider value={{ store, actions }}>
