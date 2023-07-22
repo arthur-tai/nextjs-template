@@ -1,19 +1,21 @@
-// 單純使用 useReducer 的 custom hook 封裝
-import { useReducer } from "react"
+// useContext, useReducer 的 custom hook template
+import { createContext, useContext, useReducer } from "react"
 import { STATUS, STATUS_TYPE } from "@/constants/common"
+
+// 全域的 error type, 定義前後端討論好的 error schema, 處理 error 的時都可以使用同樣邏輯
+// btw axios 的第一層攔截器的封裝時，應該先處理好大部分, 則 swr 同...!?
 
 // 每個 hook 都可以有自己的 type definition in this file and also will export it
 export type ProductStore = {
   status: STATUS_TYPE;
   error: WuCommon.ErrorType;
-  products: any[];
+  products: any[]; // 這裡可以使用 @types 裡面定義的，因為屬於 api data definition 的範疇
 }
 export type ProductAction = {
   init: () => Promise<void>;
   getList: () => Promise<void>;
   getProductById: (id: string) => Promise<void>;
 }
-
 // enum definition about reducer action.type
 export enum ProductActionType {
   INIT,
@@ -23,6 +25,16 @@ export enum ProductActionType {
   GET_LIST_SUCCESS,
   GET_LIST_FAIL,
 }
+
+// initial data with api data
+const initialStore = {
+  status: STATUS.LOADING as STATUS_TYPE,
+  error: null,
+  products: []
+}
+
+export const ProductsContext = createContext(null)
+export const useProductCtx = () => useContext(ProductsContext)
 
 type ReducerAction = {
   type: ProductActionType;
@@ -53,12 +65,12 @@ const reducer = (store: ProductStore, action: ReducerAction): ProductStore => {
   }
 }
 
-// initial data with api data
-const initialStore: ProductStore = {
-  status: STATUS.LOADING as STATUS_TYPE,
-  error: null,
-  products: []
-}
+// 主要因為 dispatch 會造成 rerender, 如果直接傳出去感覺會比較不安全,
+// 類似於外界都可以拿到 dispatch 這個炸彈，隨時引爆
+/**
+ * 透過一層封裝(底下的 action object)，達成類似 suga/thunk 等非同步處理(side effect)，
+ * 也可以把 api call 或 api 資料處理都放在這個 hook 中，而不是直接散落在各個 component 內
+ */
 const useProduct = (): { store: ProductStore, action: ProductAction } => {
   const [store, dispatch] = useReducer(reducer, initialStore)
 
@@ -77,7 +89,7 @@ const useProduct = (): { store: ProductStore, action: ProductAction } => {
     },
     getList: async () => {
       try {
-        // set loading true, etc...
+        // set isLoading true, etc...
         dispatch({ type: ProductActionType.GET_LIST })
 
         // something like
@@ -93,7 +105,7 @@ const useProduct = (): { store: ProductStore, action: ProductAction } => {
     },
     getProductById: async (id: string) => {
       try {
-        // set loading true, etc...
+        // set isLoading true, etc...
         dispatch({ type: ProductActionType.GET_LIST })
 
         // something like
@@ -116,7 +128,7 @@ export default useProduct
 
 /*
 import { useEffect } from "react"
-import useProduct from "@/hooks/useProduct"
+import useProduct, { ProductsContext } from "@/hooks/useProduct"
 
 const PageComponent = ()=>{
   const { store, action } = useProduct()
@@ -125,7 +137,19 @@ const PageComponent = ()=>{
     action.init()
   },[])
 
-  if(store.status !== "init" && store.status === "loading") return null
+  return (
+    <ProductsContext.Provider value={{store, action}}>
+      {store.status === "loading" ? null: children}
+    </ProductsContext.Provider>
+  )
+}
+
+---
+In child component
+
+import { useProductCtx } from "@/hooks/useProduct"
+const ChildComponent = ()=>{
+  const { store, action } = useProductCtx()
 
   return (
     <div>
