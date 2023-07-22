@@ -1,6 +1,6 @@
 // Custom hook with useReducer + useContext
 import { useEffect } from "react"
-import useProduct, { ProductContext } from "@/hooks/useProductWithCtx"
+import useProduct, { ProductContext } from "@/hooks/useProductSimpleWithContext"
 import { STATUS } from "@/constants/common"
 
 import Example2Child from "@/components/Example2"
@@ -29,6 +29,6 @@ const PageComponent = () => {
 export default PageComponent
 
 
-// useContext perf may use useMemo to others components
-// or see or use use-context-selector library implementation
-// const AnotherMemoComponent = useMemo(() => <AnotherChild />, [deps...])
+// about useContext rerender for better perf may use useMemo to memorize components
+// const AnotherMemoComponent = useMemo(() => <AnotherChild />, deps)
+// or see or use `use-context-selector` library implementation

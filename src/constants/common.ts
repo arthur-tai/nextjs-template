@@ -7,6 +7,8 @@ export const STATUS = {
   FETCH_ERROR: "FETCH_ERROR",
 }
 export type STATUS_TYPE = keyof typeof STATUS
+
+// directly check, store.status === STATUS.LOADING or implement this helper func
 export const statusChecker = Object.freeze({
   isLoading: (s: STATUS_TYPE) => s === STATUS.LOADING,
   isInit: (s: STATUS_TYPE) => s === STATUS.INIT,

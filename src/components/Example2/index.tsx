@@ -1,4 +1,4 @@
-import { useProductCtx } from "@/hooks/useProductWithCtx"
+import { useProductCtx } from "@/hooks/useProductSimpleWithContext"
 
 const Example2 = () => {
   console.log("--- Example2 Child rerender ---");
